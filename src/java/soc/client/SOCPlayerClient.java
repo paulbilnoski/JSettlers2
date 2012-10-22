@@ -193,7 +193,9 @@ public class SOCPlayerClient extends Panel
     
     /**
      * Helper object to receive incoming network traffic from the server.
+     * @deprecated Replaced with the MessageFactory
      */
+    @Deprecated
     private MessageTreater treater;
     
     /**
@@ -5306,13 +5308,20 @@ public class SOCPlayerClient extends Panel
          */
         static class NetReadTask implements Runnable
         {
-            final ClientNetwork net;
-            final SOCPlayerClient client;
+            private final ClientNetwork net;
+            private final SOCPlayerClient client;
+            
+            /**
+             * Helper object to receive incoming network traffic from the server.
+             */
+            private final MessageFactory messageFactory;
             
             public NetReadTask(SOCPlayerClient client, ClientNetwork net)
             {
                 this.client = client;
                 this.net = net;
+                //TODO: construct from some configuration criteria
+                messageFactory = new SOCClassicMessageFactory();
             }
             
             /**
@@ -5350,6 +5359,11 @@ public class SOCPlayerClient extends Panel
          */
         class SOCPlayerLocalStringReader implements Runnable
         {
+            /**
+             * Helper object to receive incoming network traffic from the server.
+             */
+            private final MessageFactory messageFactory;
+            
             LocalStringConnection locl;
 
             /**
@@ -5360,6 +5374,7 @@ public class SOCPlayerClient extends Panel
             protected SOCPlayerLocalStringReader (LocalStringConnection prConn)
             {
                 locl = prConn;
+                messageFactory = new SOCClassicMessageFactory();
 
                 Thread thr = new Thread(this);
                 thr.setDaemon(true);
@@ -5374,9 +5389,36 @@ public class SOCPlayerClient extends Panel
                 Thread.currentThread().setName("cli-stringread");  // Thread name for debug
                 try
                 {
+                    ClientMessageContext ctx = new ClientMessageContext() {
+                        public boolean isPractice() {
+                            return true;
+                        }
+                        public SOCPlayerClient getClient() {
+                            return client;
+                        }
+                    };
+                    
                     while (locl.isConnected())
                     {
                         String s = locl.readNext();
+                        try
+                        {
+                            NetworkMessage netMsg = messageFactory.createMessage(s);
+                            D.ebugPrintln(netMsg.toString());
+                            
+                            // Until the functionality can be pushed into each message, have to use the treater message implementation
+                            //netMsg.execute(ctx);
+                            client.treater.treat((SOCMessage)netMsg, true);
+                            
+                            // The message executed successfully, so read another.
+                            // When all messages are handled using the factory, this will be removed
+                            continue;
+                        }
+                        // catch RuntimeException as well as MessageException
+                        catch (Exception e) {
+                            D.ebugPrintStackTrace(e, "Failed processing message ["+s+"], handling with legacy treater");
+                        }
+                        
                         SOCMessage msg = SOCMessage.toMsg(s);
                         
                         client.treater.treat(msg, true);

@@ -119,7 +119,9 @@ public class SOCVersion extends SOCMessage
      *
      * @param s   the String to parse
      * @return    a Version message
+     * @deprecated Moved to {@link SOCClassicMessageFactory}
      */
+    @Deprecated
     public static SOCVersion parseDataStr(String s)
     {
         int vn;     // version number
@@ -164,4 +166,80 @@ public class SOCVersion extends SOCMessage
         return 1100;
     }
 
+//    public void execute(ClientMessageContext context) throws MessageException
+//    {
+//        SOCVersion mes = this;
+//        boolean isPractice = context.isPractice();
+//        SOCPlayerClient client = context.getClient();
+//
+//        int sVersion = client.getServerVersion();
+//
+//        D.ebugPrintln("handleVERSION: " + mes);
+//        int vers = mes.getVersionNumber();
+//        if (! isPractice)
+//        {
+//            sVersion = vers;
+//            client.setServerVersion(sVersion);
+//
+//            // Display the version on main panel, unless we're running a server.
+//            // (If so, want to display its listening port# instead)
+//            if (null == client.net.localTCPServer)
+//            {
+//                client.versionOrlocalTCPPortLabel.setForeground(new Color(252, 251, 243)); // off-white
+//                client.versionOrlocalTCPPortLabel.setText("v " + mes.getVersionString());
+//                new AWTToolTip ("Server version is " + mes.getVersionString()
+//                                + " build " + mes.getBuild()
+//                                + "; client is " + Version.version()
+//                                + " bld " + Version.buildnum(),
+//                                client.versionOrlocalTCPPortLabel);
+//            }
+//
+//            if ((client.net.practiceServer == null) && (sVersion < SOCNewGameWithOptions.VERSION_FOR_NEWGAMEWITHOPTIONS)
+//                    && (client.so != null))
+//                client.so.setEnabled(false);  // server too old for options, so don't use that button
+//        }
+//
+//        // If we ever require a minimum server version, would check that here.
+//
+//        // Reply with our client version.
+//        // (This was sent already in connect(), in 1.1.06 and later)
+//
+//        // Check known game options vs server's version. (added in 1.1.07)
+//        // Server's responses will add, remove or change our "known options".
+//        final int cliVersion = Version.versionNumber();
+//        if (sVersion > cliVersion)
+//        {
+//            // Newer server: Ask it to list any options we don't know about yet.
+//            if (! isPractice)
+//                client.gameOptionsSetTimeoutTask();
+//            client.getGameManager().put(SOCGameOptionGetInfos.toCmd(null), isPractice);  // sends "-"
+//        }
+//        else if (sVersion < cliVersion)
+//        {
+//            if (sVersion >= SOCNewGameWithOptions.VERSION_FOR_NEWGAMEWITHOPTIONS)
+//            {
+//                // Older server: Look for options created or changed since server's version.
+//                // Ask it what it knows about them.
+//                Vector tooNewOpts = SOCGameOption.optionsNewerThanVersion(sVersion, false, false, null);
+//                if (tooNewOpts != null)
+//                {
+//                    if (! isPractice)
+//                        client.gameOptionsSetTimeoutTask();
+//                    client.gmgr.put(SOCGameOptionGetInfos.toCmd(tooNewOpts.elements()), isPractice);
+//                }
+//            } else {
+//                // server is too old to understand options. Can't happen with local practice srv,
+//                // because that's our version (it runs from our own JAR file).
+//                if (! isPractice)
+//                    client.tcpServGameOpts.noMoreOptions(true);
+//            }
+//        } else {
+//            // sVersion == cliVersion, so we have same code as server for getAllKnownOptions.
+//            // For local practice games, optionSet may already be initialized, so check vs null.
+//            GameOptionServerSet opts = (isPractice ? client.practiceServGameOpts : client.tcpServGameOpts);
+//            if (opts.optionSet == null)
+//                opts.optionSet = SOCGameOption.getAllKnownOptions();
+//            opts.noMoreOptions(isPractice);  // defaults not known unless it's local practice
+//        }
+//    }
 }

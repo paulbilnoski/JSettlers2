@@ -90,7 +90,7 @@ import java.util.StringTokenizer;
  *
  * @author Robert S Thomas
  */
-public abstract class SOCMessage implements Serializable, Cloneable
+public abstract class SOCMessage implements Serializable, Cloneable, NetworkMessage
 {
     /**
      * message type IDs.
@@ -444,7 +444,9 @@ public abstract class SOCMessage implements Serializable, Cloneable
      * @param s  String to convert
      * @return   converted String to a SOCMessage, or null if the string is garbled,
      *           or is an unknown command id
+     * @deprecated Handle with {@link MessageFactory#createMessage(String)}
      */
+    @Deprecated
     public static SOCMessage toMsg(String s)
     {
         try
@@ -803,4 +805,14 @@ public abstract class SOCMessage implements Serializable, Cloneable
             return null;
         }
     }
+    
+    public void execute(ClientMessageContext context) throws MessageException
+    {
+        throw new MessageException("Not implemented for "+getClass().getSimpleName());
+    }
+
+//    public void execute(ServerMessageContext context) throws MessageException
+//    {
+//        throw new MessageException("Not implemented for "+getClass().getSimpleName());
+//    }
 }
