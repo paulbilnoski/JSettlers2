@@ -22,7 +22,10 @@ package soc.client;
 
 import soc.disableDebug.D;
 
+import soc.message.MessageFactory;
+import soc.message.NetworkMessage;
 import soc.message.SOCChannels;
+import soc.message.SOCClassicMessageFactory;
 import soc.message.SOCCreateAccount;
 import soc.message.SOCMessage;
 import soc.message.SOCRejectConnection;
@@ -262,7 +265,7 @@ public class SOCAccountClient extends Applet implements Runnable, ActionListener
         setLayout(cardLayout);
 
         add(messagePane, MESSAGE_PANEL); // shown first
-        add(mainPane, MAIN_PANEL);        
+        add(mainPane, MAIN_PANEL);
     }
 
     /**
@@ -293,6 +296,7 @@ public class SOCAccountClient extends Applet implements Runnable, ActionListener
     /**
      * Initialize the applet
      */
+    @Override
     public synchronized void init()
     {
         System.out.println("Java Settlers Account Client " + Version.version() +
@@ -302,7 +306,7 @@ public class SOCAccountClient extends Applet implements Runnable, ActionListener
         String param = null;
         int intValue;
             
-        intValue = getHexParameter("background"); 
+        intValue = getHexParameter("background");
         if (intValue != -1)
             setBackground(new Color(intValue));
 
@@ -332,7 +336,7 @@ public class SOCAccountClient extends Applet implements Runnable, ActionListener
     /**
      * Attempts to connect to the server. See {@link #connected} for success or
      * failure.
-     * @throws IllegalStateException if already connected 
+     * @throws IllegalStateException if already connected
      */
     public synchronized void connect()
     {
@@ -442,10 +446,22 @@ public class SOCAccountClient extends Applet implements Runnable, ActionListener
     {
         try
         {
+            MessageFactory messageFactory = new SOCClassicMessageFactory();
             while (connected)
             {
                 String s = in.readUTF();
-                treat((SOCMessage) SOCMessage.toMsg(s));
+                try
+                {
+                    NetworkMessage netMsg = messageFactory.createMessage(s);
+                    D.ebugPrintln(netMsg.toString());
+                    
+                    treat((SOCMessage) netMsg);
+                }
+                // catch RuntimeException as well as MessageException
+                catch (Exception e) {
+                    System.err.println("Failed processing message ["+s+"], handling with legacy treater");
+                    e.printStackTrace();
+                }
             }
         }
         catch (IOException e)
@@ -598,12 +614,14 @@ public class SOCAccountClient extends Applet implements Runnable, ActionListener
     /**
      * applet info
      */
+    @Override
     public String getAppletInfo()
     {
         return "SOCAccountClient 0.1 by Robert S. Thomas.";
     }
 
     /** destroy the applet */
+    @Override
     public void destroy()
     {
         String err = "Sorry, the applet has been destroyed. " + ((ex == null) ? "Load the page again." : ex.toString());
@@ -662,16 +680,18 @@ public class SOCAccountClient extends Applet implements Runnable, ActionListener
 
     private WindowAdapter createWindowAdapter()
     {
-        return new MyWindowAdapter();
+        return new AccountWindowAdapter();
     }
     
-    private class MyWindowAdapter extends WindowAdapter
+    private class AccountWindowAdapter extends WindowAdapter
     {
+        @Override
         public void windowClosing(WindowEvent evt)
         {
             System.exit(0);
         }
 
+        @Override
         public void windowOpened(WindowEvent evt)
         {
             nick.requestFocus();

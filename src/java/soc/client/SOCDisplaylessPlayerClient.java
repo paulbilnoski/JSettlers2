@@ -87,7 +87,7 @@ public class SOCDisplaylessPlayerClient implements Runnable
     protected Exception ex = null;
     protected boolean connected = false;
 
-    /** 
+    /**
      * were we rejected from server? (full or robot name taken)
      */
     protected boolean rejected = false;
@@ -157,7 +157,7 @@ public class SOCDisplaylessPlayerClient implements Runnable
      */
     public SOCDisplaylessPlayerClient(String s, boolean visual)
     {
-        this();         
+        this();
         strSocketName = s;
     }
 
@@ -183,6 +183,7 @@ public class SOCDisplaylessPlayerClient implements Runnable
         
         try
         {
+            MessageFactory messageFactory = new SOCClassicMessageFactory();
             while (connected)
             {
                 String s;
@@ -190,7 +191,16 @@ public class SOCDisplaylessPlayerClient implements Runnable
                     s = in.readUTF();
                 else
                     s = sLocal.readNext();
-                treat(SOCMessage.toMsg(s));
+                try
+                {
+                    NetworkMessage netMsg = messageFactory.createMessage(s);
+                    treat((SOCMessage) netMsg);
+                }
+                // catch RuntimeException as well as MessageException
+                catch (Exception e) {
+                    System.err.println("Failed processing message ["+s+"], handling with legacy treater");
+                    e.printStackTrace();
+                }
             }
         }
         catch (InterruptedIOException x)
@@ -542,7 +552,7 @@ public class SOCDisplaylessPlayerClient implements Runnable
 
             /**
              * the current player has cancelled an initial settlement,
-             * or has tried to place a piece illegally. 
+             * or has tried to place a piece illegally.
              */
             case SOCMessage.CANCELBUILDREQUEST:
                 handleCANCELBUILDREQUEST((SOCCancelBuildRequest) mes);
@@ -1239,7 +1249,7 @@ public class SOCDisplaylessPlayerClient implements Runnable
 
             if (rtype != SOCResourceConstants.UNKNOWN)
             {
-                int playerAmt = pl.getResources().getAmount(rtype); 
+                int playerAmt = pl.getResources().getAmount(rtype);
                 if (playerAmt >= amount)
                 {
                     pl.getResources().subtract(amount, rtype);
@@ -1363,7 +1373,7 @@ public class SOCDisplaylessPlayerClient implements Runnable
     *<P>
     * - During game startup (START1B or START2B): <BR>
     *       Sent from server, CANCELBUILDREQUEST means the current player
-    *       wants to undo the placement of their initial settlement.  
+    *       wants to undo the placement of their initial settlement.
     *<P>
     * - During piece placement (PLACING_ROAD, PLACING_CITY, PLACING_SETTLEMENT,
     *                           PLACING_FREE_ROAD1 or PLACING_FREE_ROAD2):

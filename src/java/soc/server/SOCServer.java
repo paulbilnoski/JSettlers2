@@ -3047,7 +3047,7 @@ public class SOCServer extends Server
                 // it's OK to take over this nickname.  A call made soon
                 // to nameConnection(c,true) will transfer data from old conn, to new conn.
                 return -1;
-            } else {            
+            } else {
                 // Already sent ping, timeout not yet expired.
                 return timeoutNeeded - secondsSincePing;
             }
@@ -3134,7 +3134,7 @@ public class SOCServer extends Server
     {
         try
         {
-            SOCMessage mes = SOCMessage.toMsg(str);
+            SOCMessage mes = (SOCMessage) new SOCClassicMessageFactory().createMessage(str);
             if ((mes != null) && (mes.getType() == SOCMessage.VERSION))
             {
                 handleVERSION(con, (SOCVersion) mes);
@@ -3180,7 +3180,7 @@ public class SOCServer extends Server
     {
         try
         {
-            SOCMessage mes = SOCMessage.toMsg(s);
+            SOCMessage mes = (SOCMessage) new SOCClassicMessageFactory().createMessage(s);
 
             // D.ebugPrintln(c.getData()+" - "+mes);
             if (mes != null)

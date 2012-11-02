@@ -5215,7 +5215,7 @@ public class SOCPlayerClient extends Panel
             }
 
             if (D.ebugIsEnabled())
-                D.ebugPrintln("OUT - " + SOCMessage.toMsg(s));
+                D.ebugPrintln("OUT - " + s);
 
             try
             {
@@ -5255,7 +5255,7 @@ public class SOCPlayerClient extends Panel
             }
 
             if (D.ebugIsEnabled())
-                D.ebugPrintln("OUT L- " + SOCMessage.toMsg(s));
+                D.ebugPrintln("OUT L- " + s);
 
             prCli.put(s);
 
@@ -5336,7 +5336,16 @@ public class SOCPlayerClient extends Panel
                     while (net.isConnected())
                     {
                         String s = net.in.readUTF();
-                        client.treater.treat(SOCMessage.toMsg(s), false);
+                        try
+                        {
+                            NetworkMessage netMsg = messageFactory.createMessage(s);
+                            client.treater.treat((SOCMessage) netMsg, false);
+                        }
+                        // catch RuntimeException as well as MessageException
+                        catch (Exception e) {
+                            System.err.println("Failed processing message ["+s+"]");
+                            e.printStackTrace();
+                        }
                     }
                 }
                 catch (IOException e)
@@ -5409,19 +5418,12 @@ public class SOCPlayerClient extends Panel
                             // Until the functionality can be pushed into each message, have to use the treater message implementation
                             //netMsg.execute(ctx);
                             client.treater.treat((SOCMessage)netMsg, true);
-                            
-                            // The message executed successfully, so read another.
-                            // When all messages are handled using the factory, this will be removed
-                            continue;
                         }
                         // catch RuntimeException as well as MessageException
                         catch (Exception e) {
-                            D.ebugPrintStackTrace(e, "Failed processing message ["+s+"], handling with legacy treater");
+                            System.err.println("Failed processing message ["+s+"]");
+                            e.printStackTrace();
                         }
-                        
-                        SOCMessage msg = SOCMessage.toMsg(s);
-                        
-                        client.treater.treat(msg, true);
                     }
                 }
                 catch (IOException e)
