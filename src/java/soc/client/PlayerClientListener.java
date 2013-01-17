@@ -48,13 +48,13 @@ public interface PlayerClientListener
      * @param player May be {@code null} if the current player is an observer.
      */
     void playerLeft(String nickname, SOCPlayer player);
-    void playerSitdown(int seatNumber, String nickname);
+    void playerSitdown(int playerNumber, String nickname);
 
     /**
      * Game's current player has changed. Update displays.
-     * @param seatNumber  New current player number
+     * @param playerNumber  New current player number whose turn it is.
      */
-    void playerTurnSet(int seatNumber);
+    void playerTurnSet(int playerNumber);
 
     /**
      * @param pieceType A piece type identifier, such as {@link SOCPlayingPiece#CITY}
